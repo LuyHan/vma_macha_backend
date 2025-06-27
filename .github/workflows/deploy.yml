@@ -54,20 +54,28 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # 5. JAR 파일 EC2로 전송 및 백엔드 재시작
-      - name: Deploy to EC2
+      # 5-1. 기존 백엔드 프로세스 종료
+      - name: Deploy - Stop existing process
         run: |
-          # 5-1. 기존 프로세스 종료
-          # xargs -r 옵션 추가: 입력이 비어있으면 kill 명령어를 실행하지 않음
-          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ConnectTimeout=10 -o ConnectionAttempts=3 ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
+            echo '>> 기존 백엔드 프로세스 종료 시도...'
             ps -ef | grep ${{ env.JAR_FILE_NAME }} | grep -v grep | awk '{print \$2}' | xargs -r kill -9 || true
+            echo '>> 기존 백엔드 프로세스 종료 명령 전송 완료.'
           "
-          # 5-2. JAR 파일 전송
-          scp -o StrictHostKeyChecking=no ./target/${{ env.JAR_FILE_NAME }} ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.PROJECT_DIR }}/
-          
-          # 5-3. 새로운 JAR 파일로 백엔드 실행 (prod 프로파일 활성화, 로그 파일 지정)
-          # exec nohup ... & : SSH 세션과 완전히 분리하여 백그라운드에서 실행
-          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
+
+      # 5-2. JAR 파일 EC2로 전송
+      - name: Deploy - Transfer JAR file
+        run: |
+          echo '>> JAR 파일 전송 시작...'
+          scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ConnectionAttempts=3 ./target/${{ env.JAR_FILE_NAME }} ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.PROJECT_DIR }}/
+          echo '>> JAR 파일 전송 완료.'
+
+      # 5-3. 새로운 백엔드 프로세스 시작
+      - name: Deploy - Start new process
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -o ConnectTimeout=10 -o ConnectionAttempts=3 ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
+            echo '>> 새로운 백엔드 프로세스 시작 명령 전송...'
             exec nohup java -jar ${{ env.PROJECT_DIR }}/${{ env.JAR_FILE_NAME }} --spring.profiles.active=prod > ${{ env.PROJECT_DIR }}/my-backend-log.log 2>&1 &
+            echo '>> 새로운 백엔드 프로세스 시작 명령 전송 완료.'
           "
-          
+    
