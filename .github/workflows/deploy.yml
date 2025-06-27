@@ -6,8 +6,20 @@ on:
   push:
     branches:
       - main # main 브랜치에 푸시될 때 워크플로우 실행
+  workflow_dispatch: # <-- 이 줄을 추가해줘!
+    # inputs: # 수동 실행 시 인자를 받고 싶을 때 사용 (선택 사항)
+    #   logLevel:
+    #     description: 'Log level'
+    #     required: true
+    #     default: 'warning'
+    #     type: choice
+    #     options:
+    #       - info
+    #       - warning
+    #       - debug
 
 env:
+  # ... (나머지 환경 변수 및 job 정의는 그대로) ...
   JAVA_VERSION: '21' # 나의 EC2에 설치된 JDK 버전과 동일하게 설정 (예: '17', '21')
   EC2_HOST: '3.107.23.106' # <-- 나의 EC2 퍼블릭 IP 주소 (변경될 수 있으니 주의!)
   EC2_USER: 'ubuntu' # <-- EC2 접속 사용자 이름 (예: ubuntu, ec2-user)
