@@ -66,6 +66,8 @@ jobs:
           scp -o StrictHostKeyChecking=no ./target/${{ env.JAR_FILE_NAME }} ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.PROJECT_DIR }}/
           
           # 5-3. 새로운 JAR 파일로 백엔드 실행 (prod 프로파일 활성화, 로그 파일 지정)
+          # exec nohup ... & : SSH 세션과 완전히 분리하여 백그라운드에서 실행
           ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
-            nohup java -jar ${{ env.PROJECT_DIR }}/${{ env.JAR_FILE_NAME }} --spring.profiles.active=prod > ${{ env.PROJECT_DIR }}/my-backend-log.log 2>&1 &
+            exec nohup java -jar ${{ env.PROJECT_DIR }}/${{ env.JAR_FILE_NAME }} --spring.profiles.active=prod > ${{ env.PROJECT_DIR }}/my-backend-log.log 2>&1 &
           "
+          
