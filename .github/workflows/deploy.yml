@@ -46,13 +46,13 @@ jobs:
       - name: Deploy to EC2
         run: |
           # 5-1. 기존 프로세스 종료
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
+          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
             ps -ef | grep ${JAR_FILE_NAME} | grep -v grep | awk '{print \$2}' | xargs kill -9 || true
           "
           # 5-2. JAR 파일 전송
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./target/${{ env.JAR_FILE_NAME }} ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.PROJECT_DIR }}/
+          scp -o StrictHostKeyChecking=no ./target/${{ env.JAR_FILE_NAME }} ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.PROJECT_DIR }}/
           
           # 5-3. 새로운 JAR 파일로 백엔드 실행 (prod 프로파일 활성화, 로그 파일 지정)
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
+          ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
             nohup java -jar ${{ env.PROJECT_DIR }}/${{ env.JAR_FILE_NAME }} --spring.profiles.active=prod > ${{ env.PROJECT_DIR }}/my-backend-log.log 2>&1 &
           "
