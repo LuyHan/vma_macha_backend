@@ -27,10 +27,6 @@ env:
   JAR_FILE_NAME: 'awsserverapi-0.0.1-SNAPSHOT.jar' # <-- 아츠리아의 빌드된 JAR 파일 이름
   PROJECT_DIR: '/home/ubuntu/backend' # <-- EC2 내 백엔드 프로젝트 폴더 경로
 
-# .github/workflows/deploy.yml
-
-# ... (생략) ...
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
