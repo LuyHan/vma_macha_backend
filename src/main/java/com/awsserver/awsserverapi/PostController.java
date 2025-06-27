@@ -28,13 +28,13 @@ public class PostController {
     @Autowired
     private PostRepository postRepository;
 
-    @GetMapping
+    @GetMapping(produces = "application/json;charset=UTF-8")
     public List<Post> getAllPosts() {
         List<Post> posts = postRepository.findAll(Sort.by("createdAt").descending());
         return posts;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Post> getPostById(@PathVariable Long id) {
         // PostRepository의 findById() 메서드를 사용해서 ID로 게시글을 찾음
         // findById()는 Optional<Post>를 반환 (게시글이 없을 수도 있으므로)
@@ -50,7 +50,7 @@ public class PostController {
     }
 
     //게시글 작성 API (새로 추가할 코드)
-    @PostMapping // <-- "/api/posts" 경로로 POST 요청이 오면 이 메서드를 실행
+    @PostMapping(produces = "application/json;charset=UTF-8")
     public ResponseEntity<Post> createPost(@RequestBody Post post) { // <-- @RequestBody로 요청 본문의 JSON 데이터를 Post 객체로 받음
         // 데이터베이스에 저장 (save() 메서드는 저장 후 저장된 엔티티를 반환)
         // created_at은 DB에서 자동으로 채워지므로 별도 설정 불필요
