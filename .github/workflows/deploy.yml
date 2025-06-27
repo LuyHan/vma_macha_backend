@@ -15,12 +15,36 @@ env:
   JAR_FILE_NAME: 'awsserverapi-0.0.1-SNAPSHOT.jar' # <-- 아츠리아의 빌드된 JAR 파일 이름
   PROJECT_DIR: '/home/ubuntu/backend' # <-- EC2 내 백엔드 프로젝트 폴더 경로
 
+# .github/workflows/deploy.yml
+
+# ... (생략) ...
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # ... (생략) ...
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Java 환경 설정
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # 3. Spring Boot 프로젝트 빌드
+      - name: Build with Maven
+        run: mvn clean install -DskipTests
+
+      # 4. SSH 키 설정 (GitHub Actions Secrets 사용)
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       # 5. JAR 파일 EC2로 전송 및 백엔드 재시작
       - name: Deploy to EC2
