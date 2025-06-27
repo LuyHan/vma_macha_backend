@@ -17,42 +17,45 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest # 워크플로우를 실행할 가상 환경 (최신 우분투)
+    runs-on: ubuntu-latest
 
     steps:
       # 1. 코드 체크아웃
       - name: Checkout code
-        uses: actions/checkout@v4 # GitHub Repository의 코드를 워크플로우 환경으로 가져옴
+        uses: actions/checkout@v4
 
       # 2. Java 환경 설정
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin' # OpenJDK 배포판 
-          cache: 'maven' # Maven 의존성 캐싱 (빌드 속도 향상)
+          distribution: 'temurin'
+          cache: 'maven'
 
       # 3. Spring Boot 프로젝트 빌드
       - name: Build with Maven
-        run: mvn clean install -DskipTests # 테스트를 건너뛰고 빌드 (CI 단계에서 테스트를 별도로 실행할 수도 있음)
+        run: mvn clean install -DskipTests
 
       # 4. SSH 키 설정 (GitHub Actions Secrets 사용)
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }} # <-- GitHub Secrets에서 SSH_PRIVATE_KEY 가져옴
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       # 5. JAR 파일 EC2로 전송 및 백엔드 재시작
       - name: Deploy to EC2
         run: |
           # 5-1. 기존 프로세스 종료
+          # -i 옵션 제거!
           ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
-            ps -ef | grep ${JAR_FILE_NAME} | grep -v grep | awk '{print \$2}' | xargs kill -9 || true
+            ps -ef | grep ${{ env.JAR_FILE_NAME }} | grep -v grep | awk '{print \$2}' | xargs kill -9 || true
           "
           # 5-2. JAR 파일 전송
+          # -i 옵션 제거!
           scp -o StrictHostKeyChecking=no ./target/${{ env.JAR_FILE_NAME }} ${{ env.EC2_USER }}@${{ env.EC2_HOST }}:${{ env.PROJECT_DIR }}/
           
           # 5-3. 새로운 JAR 파일로 백엔드 실행 (prod 프로파일 활성화, 로그 파일 지정)
+          # -i 옵션 제거!
           ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_HOST }} "
             nohup java -jar ${{ env.PROJECT_DIR }}/${{ env.JAR_FILE_NAME }} --spring.profiles.active=prod > ${{ env.PROJECT_DIR }}/my-backend-log.log 2>&1 &
           "
