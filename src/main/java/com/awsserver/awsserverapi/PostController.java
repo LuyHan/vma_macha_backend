@@ -15,6 +15,7 @@ import com.awsserver.awsserverapi.repository.PostRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.awsserver.awsserverapi.model.Post;
@@ -57,6 +58,33 @@ public class PostController {
         Post savedPost = postRepository.save(post);
         // 201 Created 상태 코드와 함께 저장된 게시글 데이터를 반환
         return new ResponseEntity<>(savedPost, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}") // <-- {id} 부분은 URL 경로에서 ID 값을 받겠다는 의미
+    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post updatedPost) {
+        // 1. 주어진 ID로 게시글을 데이터베이스에서 찾음
+        Optional<Post> existingPostOptional = postRepository.findById(id);
+
+        // 2. 게시글이 존재하면 업데이트 진행
+        if (existingPostOptional.isPresent()) {
+            Post existingPost = existingPostOptional.get();
+
+            // 3. 요청 본문에서 받은 데이터로 기존 게시글의 필드를 업데이트
+            // (ID, createdAt은 변경하지 않음)
+            existingPost.setTitle(updatedPost.getTitle());
+            existingPost.setContent(updatedPost.getContent());
+            existingPost.setAuthor(updatedPost.getAuthor()); // 작성자도 변경 가능하게
+            // updated_at은 @UpdateTimestamp가 자동으로 처리
+
+            // 4. 업데이트된 게시글을 데이터베이스에 저장 (save()는 ID가 있으면 업데이트, 없으면 삽입)
+            Post savedPost = postRepository.save(existingPost);
+
+            // 5. 200 OK 응답과 함께 업데이트된 게시글 데이터를 반환
+            return new ResponseEntity<>(savedPost, HttpStatus.OK);
+        } else {
+            // 6. 게시글이 존재하지 않으면 404 Not Found 응답을 반환
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
     
     
