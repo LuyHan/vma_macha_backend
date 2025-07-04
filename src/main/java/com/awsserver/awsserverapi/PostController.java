@@ -8,6 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -83,6 +84,21 @@ public class PostController {
             return new ResponseEntity<>(savedPost, HttpStatus.OK);
         } else {
             // 6. 게시글이 존재하지 않으면 404 Not Found 응답을 반환
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    // 게시글 삭제 API (새로 추가할 코드)
+    @DeleteMapping("/{id}") // <-- {id} 부분은 URL 경로에서 ID 값을 받겠다는 의미
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) { // <-- @PathVariable로 ID 값을 받음
+        // 1. 주어진 ID로 게시글이 존재하는지 확인 (선택 사항이지만 안전을 위해 권장)
+        if (postRepository.existsById(id)) { // existsById()는 해당 ID의 엔티티가 존재하는지 boolean 반환
+            // 2. 게시글이 존재하면 삭제
+            postRepository.deleteById(id);
+            // 3. 204 No Content 응답 반환 (삭제 성공 시 본문 없이 응답)
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            // 4. 게시글이 존재하지 않으면 404 Not Found 응답 반환
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
